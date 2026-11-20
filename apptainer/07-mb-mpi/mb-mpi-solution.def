@@ -1,0 +1,90 @@
+Bootstrap: localimage
+From: ../04-python-scilib/python-scilib.sif
+
+%files
+    ./prg/mandelbrot-mpi.py /exec/
+    ./prg/default.conf /exec/
+
+%environment
+    # general
+    export LC_ALL=C
+    export PATH=/exec:${PATH}
+
+    # UCX
+    export UCX_VER_MAIN=1.18
+    export UCX_VER_SUB=1
+    export UCX_VER=${UCX_VER_MAIN}.${UCX_VER_SUB}
+    export LD_LIBRARY_PATH=/opt/ucx-${UCX_VER}/lib:${LD_LIBRARY_PATH}
+    export PATH=/opt/ucx-${UCX_VER}/bin:${PATH}
+
+    # OpenMPI
+    export LD_LIBRARY_PATH=/opt/openmpi/lib:${LD_LIBRARY_PATH}
+    export PATH=/opt/openmpi/bin:${PATH}
+    export OMPI_DIR=/opt/openmpi/build
+
+%post
+    export LC_ALL=C
+    export DEBIAN_FRONTEND=noninteractive
+
+    # install tools
+    apt update -y   
+    apt-get install -y wget wget build-essential libtbb-dev openssh-client pkg-config libevent-dev libhwloc-dev
+    # download and build UCX
+    export UCX_VER_MAIN=1.18
+    export UCX_VER_SUB=1
+    export UCX_VER=${UCX_VER_MAIN}.${UCX_VER_SUB}
+    cd /opt
+    wget https://github.com/openucx/ucx/releases/download/v${UCX_VER}/ucx-${UCX_VER}.tar.gz
+    tar xvf ucx-${UCX_VER}.tar.gz
+    cd ucx-${UCX_VER}
+    ./configure --prefix=/opt/ucx-${UCX_VER} --enable-mt
+    make -j 10
+    make install
+
+    # download and build OpenMPI
+    export MPI_VER_MAIN=5.0
+    export MPI_VER_SUB=3
+    export MPI_VER=${MPI_VER_MAIN}.${MPI_VER_SUB}
+    cd /opt
+    wget https://download.open-mpi.org/release/open-mpi/v${MPI_VER_MAIN}/openmpi-${MPI_VER}.tar.gz
+    tar xvzf openmpi-${MPI_VER}.tar.gz
+    rm -rf /opt/openmpi-${MPI_VER}.tar.gz
+    mv openmpi-${MPI_VER} openmpi
+    cd openmpi
+    ./configure --prefix=/opt/openmpi --with-slurm --with-pmix=internal --with-libevent --with-hwloc --with-ucx=/opt/ucx-${UCX_VER}
+    make all install
+    cd ..
+    export LD_LIBRARY_PATH=/opt/openmpi/lib:${LD_LIBRARY_PATH}
+    export PATH=/opt/openmpi/bin:${PATH}
+
+    # install mpi4py
+    pip3 install mpi4py --break-system-packages
+
+    # set file permissions
+    chmod a+rx /exec/*.py
+    chmod a+r /exec/*.conf
+
+%runscript
+    echo "Usage: "
+    echo "  singularity exec mb-mpi.sif mandelbrot-mpi.py"
+    echo "  singularity exec mb-mpi.sif mandelbrot-mpi.py --config <config file>"
+    echo
+    echo "  <config file> example:"
+    echo "--------------------------"
+    cat /exec/default.conf
+    echo "--------------------------"
+
+%test
+    echo "Mandelbrot set python scripts and config file:" 
+    ls -lr /exec/*
+
+%labels
+    Author      uros (dot) lotric (at) fri (dot) uni (dash) lj (dot) si
+                barbara (dot) krasovec (at) ijs (dot) si
+    Container   Mandelbrot set with MPI
+    Version     1.1
+    Description Workshop advanced supercomputing (Superračunalištvo bolj zares)
+
+%help
+    For details run:
+        ./mpi-mb.sif

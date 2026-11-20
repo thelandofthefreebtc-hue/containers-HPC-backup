@@ -1,0 +1,23 @@
+Bootstrap: 
+From: 
+
+%files
+    # datoteke, ki jih iz gostitelja prenesemo v vsebnik
+
+%environment
+    # nastavitev okoljskih spremenljivk ob zagonu vsebnika
+
+%post
+    # namestitveni koraki v vsebniku
+	
+%runscript
+    # skripta, ki se izvede ob zagonu vsebnika
+
+%test
+    # testna skripta
+
+%labels
+    # poljubne oznake vsebnika kot pari: oznaka vrednost
+
+%help
+    # navodila za uporabo vsebnika

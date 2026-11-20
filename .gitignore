@@ -1,0 +1,22 @@
+# Containers
+*.sif
+
+# Sandbox containers
+*.sb
+
+# numba cache
+__pycache__
+
+# Images of the Mandelbrot set
+#mandelbrot*.jpg
+
+# IMDb dataset
+**/aclImdb
+
+# logs
+*.log
+
+# Slurm outputs & macOS
+*.out
+*.err
+.DS_Store

@@ -1,0 +1,56 @@
+Bootstrap: docker
+From: ubuntu:latest
+
+%files
+    ./prg/mandelbrot-seq.py /exec/
+    ./prg/mandelbrot-par.py /exec/
+    ./prg/default.conf /exec/
+
+%environment
+    export LC_ALL=C    
+    export PATH=/exec:${PATH}
+
+%post
+    export LC_ALL=C    
+    export DEBIAN_FRONTEND=noninteractive
+
+    apt -y update
+
+    apt -y install build-essential
+    apt -y install libtbb-dev
+    apt -y install python3-dev
+    apt -y install python3-pip
+
+    pip3 install numpy --break-system-packages
+    pip3 install Pillow --break-system-packages
+    pip3 install tbb --break-system-packages
+    pip3 install numba --break-system-packages
+
+    chmod a+rx /exec/*.py
+    chmod a+r /exec/*.conf
+	
+%runscript
+    echo "Usage: "
+    echo "  apptainer exec mb-cpu.sif mandelbrot-seq.py"
+    echo "  apptainer exec mb-cpu.sif mandelbrot-par.py"
+    echo "  apptainer exec mb-cpu.sif mandelbrot-seq.py --config <config file>"
+    echo "  apptainer exec mb-cpu.sif mandelbrot-par.py --config <config file>"
+    echo
+    echo "  <config file> example:"
+    echo "--------------------------"
+    cat /exec/default.conf
+    echo "--------------------------"
+
+%test
+    echo "Mandelbrot set python scripts and config file:" 
+    ls -lr /exec/*
+
+%labels
+    Author      uros (dot) lotric (at) fri (dot) uni (dash) lj (dot) si
+    Container   Mandelbrot set on CPU - complete build
+    Version     1.0
+    Description Workshop advanced supercomputing (Superračunalištvo bolj zares)
+
+%help
+    For details run:
+        ./mb-cpu.sif

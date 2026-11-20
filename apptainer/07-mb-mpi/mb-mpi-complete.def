@@ -1,0 +1,84 @@
+Bootstrap: docker
+From: ubuntu:24.04
+
+%files
+    ./prg/mandelbrot-mpi.py /exec/
+    ./prg/default.conf /exec/
+
+%environment
+    export LC_ALL=C
+    export PATH=/exec:${PATH}
+
+    # MPI
+    export LD_LIBRARY_PATH=/opt/openmpi/lib:${LD_LIBRARY_PATH}
+    export PATH=/opt/openmpi/bin:${PATH}
+    export OMPI_DIR=/opt/openmpi/build
+
+%post
+    export LC_ALL=C
+    export DEBIAN_FRONTEND=noninteractive
+    # install tools
+    apt update -y
+    apt-get install -y wget wget build-essential libtbb-dev openssh-client pkg-config libevent-dev libhwloc-dev python3 python3-dev python3-pip
+
+    # download and build UCX
+    export UCX_VER_MAIN=1.18
+    export UCX_VER_SUB=1
+    export UCX_VER=${UCX_VER_MAIN}.${UCX_VER_SUB}
+    cd /opt
+    wget https://github.com/openucx/ucx/releases/download/v${UCX_VER}/ucx-${UCX_VER}.tar.gz
+    tar xvf ucx-${UCX_VER}.tar.gz
+    cd ucx-${UCX_VER}
+    ./configure --prefix=/opt/ucx-${UCX_VER} --enable-mt
+    make -j 10
+    make install
+
+    # download and build OpenMPI
+    export MPI_VER_MAIN=5.0
+    export MPI_VER_SUB=3
+    export MPI_VER=${MPI_VER_MAIN}.${MPI_VER_SUB}
+    cd /opt
+    wget https://download.open-mpi.org/release/open-mpi/v${MPI_VER_MAIN}/openmpi-${MPI_VER}.tar.gz
+    tar xvzf openmpi-${MPI_VER}.tar.gz
+    rm -rf /opt/openmpi-${MPI_VER}.tar.gz
+    mv openmpi-${MPI_VER} openmpi
+    cd openmpi
+    ./configure --prefix=/opt/openmpi --with-slurm --with-pmix=internal --with-libevent --with-hwloc --with-ucx=/opt/ucx-${UCX_VER}
+    make all install
+    cd ..
+    export LD_LIBRARY_PATH=/opt/openmpi/lib:${LD_LIBRARY_PATH}
+    export PATH=/opt/openmpi/bin:${PATH}
+
+    # install mpi4py
+    pip3 install mpi4py --break-system-packages
+    pip3 install numpy --break-system-packages
+    pip3 install Pillow --break-system-packages
+    pip3 install tbb --break-system-packages
+    pip3 install numba --break-system-packages
+    # set file permissions
+    chmod a+rx /exec/*.py
+    chmod a+r /exec/*.conf
+
+%runscript
+    echo "Usage: "
+    echo "  apptainer exec mb-mpi.sif mandelbrot-mpi.py"
+    echo "  apptainer exec mb-mpi.sif mandelbrot-mpi.py --config <config file>"
+    echo
+    echo "  <config file> example:"
+    echo "--------------------------"
+    cat /exec/default.conf
+    echo "--------------------------"
+
+%test
+    echo "Mandelbrot set python scripts and config file:"
+    ls -lr /exec/*
+
+%labels
+    Author      uros (dot) lotric (at) fri (dot) uni (dash) lj (dot) si
+    Container   Mandelbrot set with MPI
+    Version     1.1
+    Description Workshop advanced supercomputing (Superračunalištvo bolj zares)
+
+%help
+    For details run:
+        ./mb-mpi.sif

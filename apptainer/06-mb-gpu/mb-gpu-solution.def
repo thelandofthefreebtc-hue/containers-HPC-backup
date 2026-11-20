@@ -1,0 +1,69 @@
+Bootstrap: docker
+From: nvidia/cuda:12.8.1-devel-ubuntu24.04
+
+%files
+    ./prg/mandelbrot-gpu.py /exec/
+    ./prg/default.conf /exec/
+
+%environment
+    export LC_ALL=C
+    export PATH=/opt/conda/bin:${PATH}
+    export PATH=/exec:${PATH}
+    export CUDA_HOME=/usr/local/cuda
+
+%post
+    export LC_ALL=C
+    export DEBIAN_FRONTEND=noninteractive
+    export CUDA_HOME=/usr/local/cuda
+
+    apt-get update -y
+    apt-get install -y wget
+
+    chmod a+rx /exec/*.py
+    chmod a+r /exec/*.conf
+
+    export PATH=/exec:${PATH}
+
+    # Install Miniconda
+    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O Miniconda.sh
+    /bin/bash Miniconda.sh -b -p /opt/conda
+    rm Miniconda.sh
+    export PATH=/opt/conda/bin:${PATH}
+
+    conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
+    conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
+
+    conda install -y -c conda-forge -c nvidia \
+        numpy \
+        pillow \
+        numba \
+        cuda-nvvm \
+        "cuda-version=12.8"
+
+    conda clean -afy
+
+%runscript
+    echo "Usage: "
+    echo "  apptainer exec mb-gpu.sif mandelbrot-gpu.py"
+    echo "  apptainer exec mb-gpu.sif mandelbrot-gpu.py --config <config file>"
+    echo
+    echo "  <config file> example:"
+    echo "--------------------------"
+    cat /exec/default.conf
+    echo "--------------------------"
+
+%test
+    echo "Mandelbrot set python scripts and config file:"
+    ls -lr /exec/*
+    python -c "import numba; print('numba:', numba.__version__)"
+    python -c "from numba import cuda; print('CUDA available:', cuda.is_available())"
+
+%labels
+    Author      ratko (dot) pilipovic (at) fri (dot) uni (dash) lj (dot) si
+    Container   Mandelbrot set on GPU
+    Version     1.0
+    Description Workshop Containers for HPC
+
+%help
+    For details run:
+        ./mb-gpu.sif

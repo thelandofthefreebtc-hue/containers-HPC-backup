@@ -1,0 +1,55 @@
+Bootstrap: docker
+From: ubuntu:latest
+
+%files
+    ./files/* /img/
+
+%environment
+    export LC_ALL=C    
+
+%post
+    export LC_ALL=C    
+    export DEBIAN_FRONTEND=noninteractive
+    
+    apt update -y
+    apt install -y nomacs
+
+    chmod a+r /img/*
+
+%runscript
+    if [ $# -eq 0 ]
+    then
+        nomacs /img/*
+        echo
+        echo "Container includes X11 image viewer nomacs"
+        echo
+        echo "Usage:"
+        echo "  apptainer run x.sif [PARAMS]"
+        echo "  ./x.sif [PARAMS]"
+        echo "  apptainer exec x.sif nomacs [PARAMS]"
+        echo        
+        echo "  set [PARAMS] == --help for details"
+        echo
+    else
+        nomacs $@
+    fi
+
+%test
+    test -x /usr/bin/nomacs
+    test -f /img/210322_VEGA_083.jpg
+
+%labels
+    Author      uros (dot) lotric (at) fri (dot) uni (dash) lj (dot) si
+    Container   x with X11 image viewer nomacs
+    Version     1.0
+    Description Workshop advanced supercomputing (Superračunalištvo bolj zares)
+
+%help
+    Container includes X11 image viewer nomacs
+
+    Usage:
+        apptainer run x.sif [PARAMS]
+        ./x.sif [PARAMS]
+        apptainer exec x.sif nomacs [PARAMS]
+
+        set [PARAMS] == --help for details
