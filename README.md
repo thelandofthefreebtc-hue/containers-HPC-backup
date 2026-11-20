@@ -40,3 +40,13 @@ Based on the [SLING (Slovenian National Supercomputing Network)](https://doc.sli
 ## Workshop Outputs
 
 ![Mandelbrot Set](apptainer/05-mb-cpu/mandelbrot.jpg)
+
+### Interactive Container Demos (`cowsay` + `lolcat`)
+
+| Default Cow | Dragon (`-f dragon`) |
+| :---: | :---: |
+| ![Cow](assets/cow.png) | ![Dragon](assets/dragon.png) |
+
+| Tux (`-f tux`) | Stegosaurus (`-f stegosaurus`) |
+| :---: | :---: |
+| ![Tux](assets/tux.png) | ![Stegosaurus](assets/stegosaurus.png) |
