@@ -36,3 +36,7 @@ Large binary artifacts (`.sif` container images, `.sb` sandboxes, Slurm `.out`/`
 ## Reference
 
 Based on the [SLING (Slovenian National Supercomputing Network)](https://doc.sling.si/workshops/containers-hpc/) workshop curriculum.
+
+## Workshop Outputs
+
+![Mandelbrot Set](apptainer/05-mb-cpu/mandelbrot.jpg)
